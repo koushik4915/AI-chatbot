@@ -7,17 +7,10 @@ export type Message = {
   sender: "user" | "bot";
 };
 
-export const useStory = (token: string) => {
+export const useCharcterGenerater = (token: string) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [theme, setTheme] = useState("");
-  const [storyFormat, setStoryFormat] = useState("");
-  const [storyStyle, setStoryStyle] = useState("");
-  const [wordCount, setWordCount] = useState("");
-  const [ageGroup, setAgeGroup] = useState("");
-  const [sceneCount, setSceneCount] = useState("");
-  const [moral, setMoral] = useState("");
+  const [story, setStory] = useState("");
   const [loading, setLoading] = useState(false);
-
   const socket = useRef<Socket | null>(null);
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -27,23 +20,37 @@ export const useStory = (token: string) => {
     const socketInstance = io(baseUrl, { auth: { token } });
     socket.current = socketInstance;
 
-
-    socketInstance.on("story-chunk", (data: { chunk: string }) => {
-      const chunk = data.chunk;
-      
+    socketInstance.on("character-chunk", (data: { chunk: string }) => {
+      const chunk = data.chunk
       setMessages((prev) => {
         const last = prev[prev.length - 1];
         if (last?.sender === "bot") {
-          if (last.text.endsWith(chunk)) {
-            return prev;
+          if (last.text.includes(chunk)) {
+            return prev; 
           }
-
+          const maxOverlapLength = Math.min(chunk.length, last.text.length);
+          let overlapSize = 0;
+          
+          for (let i = 1; i <= maxOverlapLength; i++) {
+            const endOfExisting = last.text.slice(-i);
+            const startOfChunk = chunk.slice(0, i);
+            
+            if (endOfExisting === startOfChunk) {
+              overlapSize = i;
+            }
+          }
+          
           const updated = [...prev];
-          updated[updated.length - 1].text += chunk;
-
+          
+          if (overlapSize > 0) {
+            updated[updated.length - 1].text += chunk.slice(overlapSize);
+          } else {
+            updated[updated.length - 1].text += chunk;
+          }
+          
           return updated;
         }
-
+        
         return [...prev, { text: chunk, sender: "bot" }];
       });
     });
@@ -69,28 +76,20 @@ export const useStory = (token: string) => {
   }, [token, baseUrl]);
 
   const sendMessage = async () => {
-    if (!theme || !ageGroup || !sceneCount) return;
+    if (!story) return;
 
     setMessages((prev) => [
       ...prev,
       {
-        text: `Theme: ${theme}, Scene Count: ${sceneCount}, Age Group: ${ageGroup}, Moral: ${moral}`,
+        text: `Story: ${story}`,
         sender: "user",
       },
     ]);
 
     try {
       await axios.post(
-        `${baseUrl}/api/stories/generate`,
-        {
-          theme,
-          storyFormat,
-          storyStyle,
-          wordCount,
-          ageGroup,
-          sceneCount,
-          moral,
-        },
+        `${baseUrl}/api/character/generate-character-data`,
+        { story },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -108,21 +107,10 @@ export const useStory = (token: string) => {
 
   return {
     messages,
+    setMessages,
     sendMessage,
-    ageGroup,
-    setAgeGroup,
-    sceneCount,
-    setSceneCount,
-    theme,
-    setTheme,
-    moral,
-    setMoral,
-    storyFormat,
-    setStoryFormat,
-    storyStyle,
-    setStoryStyle,
-    wordCount,
-    setWordCount,
+    story,
+    setStory,
     loading,
   };
 };

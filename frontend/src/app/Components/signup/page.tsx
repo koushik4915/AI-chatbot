@@ -40,7 +40,6 @@ export default function Page() {
         router.push("/");
       }
     } catch (err) {
-      console.error(err);
       alert("Signup failed. Please try again.");
     }
   }

@@ -81,7 +81,6 @@ export default function DashboardPage() {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      console.log("File selected:", file);
     }
   };
 

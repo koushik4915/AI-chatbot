@@ -7,15 +7,13 @@ export type Message = {
   sender: "user" | "bot";
 };
 
-export const useStory = (token: string) => {
+export const useLyrics = (token: string) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [theme, setTheme] = useState("");
-  const [storyFormat, setStoryFormat] = useState("");
-  const [storyStyle, setStoryStyle] = useState("");
-  const [wordCount, setWordCount] = useState("");
-  const [ageGroup, setAgeGroup] = useState("");
-  const [sceneCount, setSceneCount] = useState("");
-  const [moral, setMoral] = useState("");
+  const [concept, setConcept] = useState("");
+  const [genre, setGenre] = useState("");
+  const [verses, setVerses] = useState("");
+  const [mood, setMood] = useState("");
+  const [referenceTone, setReferenceTone] = useState("");
   const [loading, setLoading] = useState(false);
 
   const socket = useRef<Socket | null>(null);
@@ -28,19 +26,30 @@ export const useStory = (token: string) => {
     socket.current = socketInstance;
 
 
-    socketInstance.on("story-chunk", (data: { chunk: string }) => {
+    socketInstance.on("lyric-chunk", (data: { chunk: string }) => {
       const chunk = data.chunk;
-      
+
       setMessages((prev) => {
         const last = prev[prev.length - 1];
         if (last?.sender === "bot") {
-          if (last.text.endsWith(chunk)) {
+          if (last.text.includes(chunk)) {
             return prev;
           }
 
-          const updated = [...prev];
-          updated[updated.length - 1].text += chunk;
+          const maxOverlapLength = Math.min(chunk.length, last.text.length);
+          let overlapSize = 0;
 
+          for (let i = 1; i <= maxOverlapLength; i++) {
+            const endOfExisting = last.text.slice(-i);
+            const startOfChunk = chunk.slice(0, i);
+
+            if (endOfExisting === startOfChunk) {
+              overlapSize = i;
+            }
+          }
+
+          const updated = [...prev];
+          updated[updated.length - 1].text += overlapSize > 0 ? chunk.slice(overlapSize) : chunk;
           return updated;
         }
 
@@ -68,28 +77,36 @@ export const useStory = (token: string) => {
     };
   }, [token, baseUrl]);
 
-  const sendMessage = async () => {
-    if (!theme || !ageGroup || !sceneCount) return;
-
+  const sendMessage = async (customOptions?: {
+    genre?: string;
+    verses?: string;
+    mood?: string;
+    referenceTone?: string;
+  }) => {
+    if (!concept || !(customOptions?.verses || verses) || !(customOptions?.mood || mood) || !(customOptions?.genre || genre)) return;
+  
+    const finalGenre = customOptions?.genre ?? genre;
+    const finalVerses = customOptions?.verses ?? verses;
+    const finalMood = customOptions?.mood ?? mood;
+    const finalTone = customOptions?.referenceTone ?? referenceTone;
+  
     setMessages((prev) => [
       ...prev,
       {
-        text: `Theme: ${theme}, Scene Count: ${sceneCount}, Age Group: ${ageGroup}, Moral: ${moral}`,
+        text: `Concept: ${concept}, Verses: ${finalVerses}, Mood: ${finalMood}, Genre: ${finalGenre}`,
         sender: "user",
       },
     ]);
-
+  
     try {
       await axios.post(
-        `${baseUrl}/api/stories/generate`,
+        `${baseUrl}/api/lyrics/generate`,
         {
-          theme,
-          storyFormat,
-          storyStyle,
-          wordCount,
-          ageGroup,
-          sceneCount,
-          moral,
+          concept,
+          genre: finalGenre,
+          verses: finalVerses,
+          mood: finalMood,
+          referenceTone: finalTone,
         },
         {
           headers: {
@@ -105,24 +122,22 @@ export const useStory = (token: string) => {
       setLoading(false);
     }
   };
+  
 
   return {
     messages,
+    setMessages,
     sendMessage,
-    ageGroup,
-    setAgeGroup,
-    sceneCount,
-    setSceneCount,
-    theme,
-    setTheme,
-    moral,
-    setMoral,
-    storyFormat,
-    setStoryFormat,
-    storyStyle,
-    setStoryStyle,
-    wordCount,
-    setWordCount,
+    concept,
+    setConcept,
+    genre,
+    setGenre,
+    referenceTone,
+    setReferenceTone,
+    verses,
+    setVerses,
+    mood,
+    setMood,
     loading,
   };
 };

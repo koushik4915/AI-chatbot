@@ -35,7 +35,7 @@ export default function Page() {
           console.log(err);
         }
 
-        router.push("/");
+        router.push("/Components/dashboard");
       }
     } catch (err) {
       console.error("Login failed:", err);

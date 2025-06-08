@@ -1,11 +1,11 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { FaHistory } from "react-icons/fa";
 import { BsStars } from "react-icons/bs";
-import { HiOutlineChevronRight } from "react-icons/hi"; // <-- Import right arrow
+import { HiOutlineChevronRight } from "react-icons/hi";
 import { useHistory } from "../context/historyContext";
 import { useAuth } from "../context/authContext";
+import { IoMenu } from "react-icons/io5";
 
 export default function Navbar() {
   const router = useRouter();
@@ -23,8 +23,8 @@ export default function Navbar() {
       <div className="fixed top-0 left-0 w-full z-10 bg-[#f7f7f8] shadow-md py-4">
         <div className="w-[90%] mx-auto flex justify-between items-center text-white">
           <div className="flex items-center gap-4 text-gray-400">
-            <FaHistory
-              className="text-2xl cursor-pointer hover:text-gray-900"
+            <IoMenu
+              className="ml-[-50px] text-2xl cursor-pointer hover:text-gray-900"
               onClick={() => setShowHistory(!showHistory)}
             />
             <div className="relative">
@@ -37,16 +37,32 @@ export default function Navbar() {
               </div>
               {dropdownOpen && (
                 <div className="absolute top-10 left-0 bg-white shadow-lg rounded-md w-72 text-black py-2 text-md">
-                  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center" onClick={()=>router.push("/Components/story-generator")}>
-                    ⁠⁠Kids Idea Story Generator
+                  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center" onClick={() => {
+                    router.push("/Components/story-generator")
+                    setDropdownOpen(!dropdownOpen)
+                  }}>
+                    ⁠Idea Story Generator
                     <HiOutlineChevronRight className="text-lg text-gray-500" />
                   </div>
-                  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center">
-                    3d Animated Character Generator
+                  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center" onClick={() => {
+                    router.push("/Components/3D-animated-character")
+                    setDropdownOpen(!dropdownOpen)
+                  }}>
+                    Animated Character Generator
                     <HiOutlineChevronRight className="text-lg text-gray-500" />
                   </div>
-                  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center">
+                  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center" onClick={() => {
+                    router.push("/Components/song-lyrics-generater")
+                    setDropdownOpen(!dropdownOpen)
+                  }}>
                     Song Lyric Designer
+                    <HiOutlineChevronRight className="text-lg text-gray-500" />
+                  </div>
+                  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center" onClick={() => {
+                    router.push("/Components/videoPrompt")
+                    setDropdownOpen(!dropdownOpen)
+                  }}>
+                    Text to Video Prompt Generator
                     <HiOutlineChevronRight className="text-lg text-gray-500" />
                   </div>
                 </div>

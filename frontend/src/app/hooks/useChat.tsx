@@ -80,10 +80,8 @@ export const useChat = (
             },
           }
         );
-        console.log(uploadRes)
   
         const fileId = uploadRes.data.fileId; 
-        console.log(fileId)
   
 
         await axios.post(
